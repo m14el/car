@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Автомобили{% endblock %}</title>
+    <style>
+        body {
+            padding: 10px;
+        }
+        .car-image {
+            max-width: 100%;
+            height: auto;
+        }
+        .sidebar {
+            background-color: #f8f9fb;
+            border-right: 1px solid #dee2e6;
+        }
+        .main-content {
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <a class="navbar-brand" href="{% url 'list_cars' %}">Главная</a>
+        <div class="collapse navbar-collapse">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'list_cars' %}">Все автомобили</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'add_car' %}">Добавить автомобиль</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'categorize' %}">Категории</a>
+                </li>
+            </ul>
+<div class="ml-auto"> <!-- Отступ для кнопок -->
+    {% if user.is_authenticated %}
+        <form method="POST" action="{% url 'logout' %}" style="display:inline;">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger">Выйти</button>
+        </form>
+    {% else %}
+        <a href="{% url 'login' %}" class="btn btn-primary">Вход</a>
+        <a href="{% url 'register' %}" class="btn btn-secondary">Регистрация</a>
+    {% endif %}
+</div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-2 sidebar">
+                <h4>Меню</h4>
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'list_cars' %}">Главная</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'categorize' %}">Категории</a>
+                    </li>
+                </ul>
+            </div>
+            <div class="col-md-10 main-content">
+                {% block content %}{% endblock %}
+            </div>
+        </div>
+    </div>
+</body>
+</html>

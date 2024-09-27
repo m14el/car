@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ car.make }} {{ car.model }}{% endblock %}
+
+{% block content %}
+    <h1>{{ car.make }} {{ car.model }}</h1>
+    {% if car.image %}
+        <img src="{{ car.image.url }}" alt="Изображение {{ car.model }}" class="img-fluid"> <!-- Используем img-fluid для отзывчивого изображения -->
+    {% else %}
+        <p>Изображение недоступно</p>
+    {% endif %}
+    <p>Год выпуска: {{ car.year }}</p>
+    <p>Описание: {{ car.description }}</p>
+
+    <h2>Комментарии</h2>
+    <form method="POST">
+        {% csrf_token %}
+        <textarea name="content" required></textarea>
+        <button type="submit" class="btn btn-primary">Добавить комментарий</button>
+    </form>
+
+    <ul>
+        {% for comment in car.comments.all %}
+            <li>{{ comment.content }} - {{ comment.author.username }}</li>
+        {% empty %}
+            <li>Нет комментариев.</li>
+        {% endfor %}
+    </ul>
+{% endblock %}

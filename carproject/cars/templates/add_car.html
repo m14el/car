@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Добавить автомобиль</title>
+</head>
+<body>
+    <h1>Добавить автомобиль</h1>
+    <form method="post">
+        {% csrf_token %}
+        <label for="make">Марка:</label>
+        <input type="text" name="make" required><br>
+        <label for="model">Модель:</label>
+        <input type="text" name="model" required><br>
+        <label for="year">Год выпуска:</label>
+        <input type="number" name="year" required><br>
+        <label for="description">Описание:</label>
+        <textarea name="description" required></textarea><br>
+        <button type="submit">Добавить</button>
+    </form>
+</body>
+</html>

@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Категории автомобилей{% endblock %}
+
+{% block content %}
+    <h1>Категории автомобилей</h1>
+    {% for category, cars in category_cars.items %}
+        <h3>{{ category }}</h3>
+        <div class="row">
+            {% for car in cars %}
+                <div class="col-md-4">
+                    <div class="card">
+                        {% if car.image %}
+                            <img src="{{ car.image.url }}" class="card-img-top" alt="Изображение {{ car.model }}">
+                        {% else %}
+                            <img src="{% static 'default_image.jpg' %}" class="card-img-top" alt="Изображение {{ car.model }}">
+                        {% endif %}
+                        <div class="card-body">
+                            <h5 class="card-title">{{ car.make }} {{ car.model }}</h5>
+                            <a href="{% url 'car_detail' car.id %}" class="btn btn-primary">Подробнее</a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% endfor %}
+{% endblock %}
