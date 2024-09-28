@@ -8,6 +8,10 @@ from .serializers import CarSerializer, CommentSerializer
 from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib import messages
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views import View
+
+
 class CarViewSet(viewsets.ModelViewSet):
     queryset = Car.objects.all()
     serializer_class = CarSerializer
@@ -16,41 +20,48 @@ class CarViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
 
+
 class CommentViewSet(viewsets.ModelViewSet):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
     permission_classes = [IsAuthenticated]
 
 
-def list_cars(request):
-    cars = Car.objects.all()
-    categories = {}
-    for car in cars:
-        if car.category not in categories:
-            categories[car.category] = []
-        categories[car.category].append(car)
-    return render(request, 'list_cars.html', {'cars':cars})
+class ListCarsView(View):
+    def get(self, request):
+        cars = Car.objects.all()
+        categories = {}
+        for car in cars:
+            if car.category not in categories:
+                categories[car.category] = []
+            categories[car.category].append(car)
+        return render(request, 'list_cars.html', {'cars': cars})
 
-def car_detail(request, car_id):
-    car = get_object_or_404(Car, id=car_id)
-    if request.method == 'POST':
+
+class CarDetailView(View):
+    def get(self, request, car_id):
+        car = get_object_or_404(Car, id=car_id)
+        comments = car.comments.all()
+        return render(request, 'car_detail.html', {'car': car, 'comments': comments})
+
+    def post(self, request, car_id):
+        car = get_object_or_404(Car, id=car_id)
         content = request.POST.get('content')
         comment = Comment.objects.create(car=car, author=request.user, content=content)
         comment.save()
-        return redirect('car_detail', car_id=car.id)  # Перенаправление на ту же страницу
-    comments = car.comments.all()  # Получаем комментарии
-    return render(request, 'car_detail.html', {'car': car, 'comments': comments})
+        return redirect('car_detail', car_id=car.id)
 
 
-@login_required  # Защита страницы для добавления автомобиля
-def add_car(request):
-    if request.method == 'POST':
+class AddCarView(LoginRequiredMixin, View):
+    def get(self, request):
+        return render(request, 'add_car.html')
+
+    def post(self, request):
         make = request.POST['make']
         model = request.POST['model']
         year = request.POST['year']
         description = request.POST['description']
 
-        # Создание нового автомобиля
         Car.objects.create(
             make=make,
             model=model,
@@ -58,43 +69,51 @@ def add_car(request):
             description=description,
             owner=request.user
         )
-        return redirect('list_cars')  # Перенаправление на список автомобилей
+        return redirect('list_cars')
 
-    return render(request, 'add_car.html')  # Показ формы добавления
 
-def category_view(request):
-    categories = Car.objects.values_list('category', flat=True).distinct() #получение уникальных категорий
-    category_cars = {category: Car.objects.filter(category=category) for category in categories}
-    return render(request, 'categories.html', {'category_cars':category_cars})
+class CategoryView(View):
+    def get(self, request):
+        categories = Car.objects.values_list('category', flat=True).distinct()
+        category_cars = {category: Car.objects.filter(category=category) for category in categories}
+        return render(request, 'categories.html', {'category_cars': category_cars})
 
-def register(request):
-    if request.method == 'POST':
+
+class RegisterView(View):
+    def get(self, request):
+        form = UserCreationForm()
+        return render(request, 'register.html', {'form': form})
+
+    def post(self, request):
         form = UserCreationForm(request.POST)
         if form.is_valid():
             form.save()
             messages.success(request, 'Регистрация прошла успешно!')
-            return redirect('list_cars')  # Перенаправляем на главную страницу
-    else:
-        form = UserCreationForm()
-    return render(request, 'register.html', {'form': form})
-
-@login_required
-def edit_car(request, car_id):
-    car = get_object_or_404(Car, id=car_id, owner=request.user)
-
-@login_required
-def delete_car(request, car_id):
-    car = get_object_or_404(Car, id=car_id, owner=request.user)
+            return redirect('list_cars')
+        return render(request, 'register.html', {'form': form})
 
 
-@login_required
-def add_comment(request, car_id):
-    car = get_object_or_404(Car, id=car_id)
-    if request.method == 'POST':
+class EditCarView(LoginRequiredMixin, View):
+    def get(self, request, car_id):
+        car = get_object_or_404(Car, id=car_id, owner=request.user)
+        # Логика редактирования автомобиля
+
+
+class DeleteCarView(LoginRequiredMixin, View):
+    def get(self, request, car_id):
+        car = get_object_or_404(Car, id=car_id, owner=request.user)
+        # Логика удаления автомобиля
+
+
+class AddCommentView(LoginRequiredMixin, View):
+    def post(self, request, car_id):
+        car = get_object_or_404(Car, id=car_id)
         content = request.POST.get('content')
         Comment.objects.create(car=car, author=request.user, content=content)
         return redirect('car_detail', car_id=car_id)
 
-def categorize(request):
-    categories = Car.objects.values_list('category', flat=True).distinct()
-    return render(request, 'categories.html', {'categories': categories})
+
+class CategorizeView(View):
+    def get(self, request):
+        categories = Car.objects.values_list('category', flat=True).distinct()
+        return render(request, 'categories.html', {'categories': categories})
